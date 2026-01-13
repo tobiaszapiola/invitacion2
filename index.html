@@ -3,340 +3,407 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invitación Especial</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    
+    <title>Nuestra Agenda Gourmet - Calendario Compartido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* --- ESTILOS GENERALES --- */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden; 
-            background-color: #1a1a1a;
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .animate-pop { animation: pop 0.3s ease-out; }
+        @keyframes pop {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
-
-        /* --- CORTINAS --- */
-        #curtain-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            pointer-events: auto;
-            transition: pointer-events 0s linear 2s;
-        }
-
-        .curtain-panel {
-            position: absolute;
-            top: 0;
-            width: 50%;
-            height: 100%;
-            background-color: #e65100;
-            background-image: repeating-linear-gradient(
-                90deg,
-                #bf360c 0%,
-                #e65100 5%,
-                #ff9800 10%,
-                #e65100 15%,
-                #bf360c 20%
-            );
-            box-shadow: inset 0 0 80px rgba(0,0,0,0.7);
-            transition: transform 2s cubic-bezier(0.6, 0.05, 0.28, 0.95);
-        }
-
-        .curtain-left { left: 0; transform-origin: top left; border-right: 2px solid #a02e00; }
-        .curtain-right { right: 0; transform-origin: top right; border-left: 2px solid #a02e00; }
-
-        /* Mensaje de Bienvenida */
-        .welcome-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
-            z-index: 20;
-            transition: opacity 0.8s ease;
-            font-family: 'Playfair Display', serif;
-            width: 100%;
-        }
-
-        .welcome-message h1 {
-            font-size: 3.5rem;
-            margin-bottom: 30px;
-            color: #fff8e1;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.6);
-            letter-spacing: 2px;
-        }
-
-        #btn-continue {
-            padding: 15px 50px;
-            font-size: 1.2rem;
-            background: linear-gradient(to bottom, #fff, #f0f0f0);
-            color: #bf360c;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
-            font-family: 'Lato', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: bold;
-        }
-
-        #btn-continue:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 25px rgba(255, 165, 0, 0.6);
-        }
-
-        /* --- CLASES DE ANIMACIÓN --- */
-        .open .curtain-left { transform: translateX(-100%) scaleX(0.9); }
-        .open .curtain-right { transform: translateX(100%) scaleX(0.9); }
-        .fade-out { opacity: 0; pointer-events: none; }
-        .remove-overlay { display: none; }
-
-        /* --- CONTENIDO PRINCIPAL --- */
-        #main-content {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 1.5s ease 1s, transform 1.5s ease 1s;
-        }
-
-        #main-content.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Tarjeta de Invitación */
-        .invitation-card {
-            background: #fffaf0;
-            padding: 50px 40px;
-            border-radius: 8px;
-            text-align: center;
-            max-width: 550px;
-            width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            border: 1px solid #dcdcdc;
-            position: relative;
-            min-height: 450px; /* Altura mínima para que no salte al cambiar contenido */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .invitation-card::before {
-            content: '';
-            position: absolute;
-            top: 15px; left: 15px; right: 15px; bottom: 15px;
-            border: 2px solid #bf360c;
-            pointer-events: none;
-        }
-
-        /* Estilos de contenido */
-        .card-content-wrapper {
-            width: 100%;
-            transition: opacity 0.5s ease;
-        }
-
-        /* PASO 2: INICIALMENTE OCULTO */
-        #step-2 {
-            display: none; /* Esto asegura que no se vea al principio */
-            opacity: 0;
-        }
-
-        .icon-wine { font-size: 3.5rem; margin-bottom: 15px; display: block; }
-        
-        h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            color: #bf360c;
-            margin-bottom: 10px;
-            margin-top: 0;
-        }
-
-        .date {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
-            margin: 10px 0;
-            font-style: italic;
-        }
-
-        .description {
-            font-family: 'Lato', sans-serif;
-            font-size: 1.1rem;
-            color: #555;
-            line-height: 1.5;
-            margin-top: 15px;
-            margin-bottom: 30px;
-        }
-
-        /* Botones Si/No */
-        .response-buttons {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            position: relative;
-            z-index: 100;
-        }
-
-        .btn-response {
-            padding: 12px 25px;
-            border-radius: 5px;
-            font-family: 'Lato', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            font-size: 1rem;
-            transition: transform 0.2s;
-        }
-
-        #btn-yes {
-            background-color: #2e7d32;
-            color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        #btn-yes:hover { background-color: #1b5e20; transform: scale(1.05); }
-
-        #btn-no {
-            background-color: #c62828;
-            color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        .whatsapp-link {
-            display: inline-block;
-            margin-top: 20px;
-            background-color: #25D366;
-            color: white;
-            text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: bold;
-            font-family: 'Lato', sans-serif;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-        .whatsapp-link:hover { transform: scale(1.05); }
-
+        .day-cell { transition: all 0.2s; cursor: pointer; }
+        .day-cell:hover:not(.empty) { background-color: #fff1f2; }
+        .day-cell.selected { border: 2px solid #f43f5e !important; background-color: #fff1f2; }
     </style>
 </head>
-<body>
+<body class="bg-rose-50/30 text-slate-800 min-h-screen pb-12">
 
-    <div id="curtain-overlay">
-        <div class="curtain-panel curtain-left"></div>
-        <div class="curtain-panel curtain-right"></div>
-        
-        <div class="welcome-message" id="welcome-text">
-            <h1>Bienvenida Mi Morocha</h1>
-            <button id="btn-continue">Continuar</button>
+    <!-- Pantalla de Conexión (Pareja) -->
+    <div id="authOverlay" class="fixed inset-0 bg-rose-500/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center animate-pop">
+            <div class="bg-rose-100 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <i data-lucide="users" class="text-rose-600 w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2">Conecta con tu pareja</h2>
+            <p class="text-slate-500 text-sm mb-6">Ingresen el mismo código secreto para compartir su calendario y lista de lugares.</p>
+            <input type="text" id="coupleCodeInput" placeholder="Ej: ana-y-pedro-2024" class="w-full px-6 py-4 bg-slate-100 border-none rounded-2xl mb-4 text-center font-bold text-rose-600 focus:ring-2 focus:ring-rose-400 outline-none">
+            <button id="joinBtn" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                Empezar a compartir <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
         </div>
     </div>
 
-    <div id="main-content">
-        <div class="invitation-card">
-            
-            <div id="step-1" class="card-content-wrapper">
-                <span class="icon-wine">🍷</span>
-                <h2>Te invito</h2>
-                <p class="date">Este jueves 4/12</p>
-                <p class="description">
-                    A tomar un vino, charlar, debatir <br>
-                    y comentar aspectos varios.
-                </p>
-                
-                <div class="response-buttons">
-                    <button id="btn-yes" class="btn-response">Si, obvio me gustaría...</button>
-                    <button id="btn-no" class="btn-response">No</button>
+    <!-- HEADER -->
+    <header class="bg-white border-b sticky top-0 z-40 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-rose-500 p-2 rounded-lg shadow-lg shadow-rose-200">
+                    <i data-lucide="heart" class="text-white w-5 h-5 fill-current"></i>
+                </div>
+                <h1 class="text-lg md:text-xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-orange-500 bg-clip-text text-transparent">
+                    Agenda Gourmet
+                </h1>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Estado de conexión -->
+                <div id="coupleStatus" class="hidden md:flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span id="displayCoupleCode" class="text-[10px] font-bold text-emerald-700 uppercase tracking-tighter">CÓDIGO</span>
+                </div>
+
+                <div class="relative">
+                    <button id="notifBtn" class="p-2 hover:bg-slate-100 rounded-full relative">
+                        <i data-lucide="bell" class="w-6 h-6 text-slate-600"></i>
+                        <span id="notifBadge" class="hidden absolute top-1 right-1 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-pulse"></span>
+                    </button>
+                    <div id="notifPanel" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border z-50 overflow-hidden border-slate-100">
+                        <div class="p-4 border-b bg-slate-50 font-bold text-[10px] text-slate-500 uppercase tracking-widest">Avisos Próximos</div>
+                        <div id="notifList" class="max-h-60 overflow-y-auto"></div>
+                    </div>
                 </div>
             </div>
-
-            <div id="step-2" class="card-content-wrapper">
-                <span class="icon-wine" style="font-size: 3rem;">🥂</span>
-                <h2>¡Excelente decisión!</h2>
-                <p class="description" style="font-size: 1.2rem; color: #333;">
-                    Confirmar asistencia al: <br>
-                    <strong>3515511484</strong>
-                </p>
-                <p class="description" style="font-size: 0.9rem; margin-top: 5px;">
-                    (Y de no poder, también comunicarse a ese número 😉)
-                </p>
-                
-                <a href="https://wa.me/5493515511484?text=Hola!%20Confirmo%20mi%20asistencia%20para%20el%20jueves%20%F0%9F%8D%B7" class="whatsapp-link" target="_blank">
-                    Enviar mensaje ahora
-                </a>
-            </div>
-
         </div>
-    </div>
+    </header>
 
-    <script>
-        // Variables
-        const btnContinue = document.getElementById('btn-continue');
-        const curtainOverlay = document.getElementById('curtain-overlay');
-        const welcomeText = document.getElementById('welcome-text');
-        const mainContent = document.getElementById('main-content');
-        
-        const step1 = document.getElementById('step-1');
-        const step2 = document.getElementById('step-2');
-        const btnYes = document.getElementById('btn-yes');
-        const btnNo = document.getElementById('btn-no');
-
-        // 1. ABRIR CORTINAS
-        btnContinue.addEventListener('click', function() {
-            curtainOverlay.classList.add('open');
-            welcomeText.classList.add('fade-out');
-            mainContent.classList.add('visible');
-            setTimeout(() => {
-                curtainOverlay.classList.add('remove-overlay');
-            }, 2000);
-        });
-
-        // 2. BOTÓN "NO" ESCURRIDIZO
-        const moveButton = () => {
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            const btnWidth = btnNo.offsetWidth;
-            const btnHeight = btnNo.offsetHeight;
-            const newX = Math.random() * (windowWidth - btnWidth - 50); 
-            const newY = Math.random() * (windowHeight - btnHeight - 50);
-
-            btnNo.style.position = 'fixed'; 
-            btnNo.style.left = newX + 'px';
-            btnNo.style.top = newY + 'px';
-            btnNo.style.zIndex = '1000'; 
-        };
-        btnNo.addEventListener('mouseover', moveButton);
-        btnNo.addEventListener('touchstart', moveButton);
-        btnNo.addEventListener('click', (e) => { e.preventDefault(); moveButton(); });
-
-        // 3. BOTÓN "SÍ" -> CAMBIAR AL PASO 2
-        btnYes.addEventListener('click', function() {
-            // A. Desvanecer paso 1
-            step1.style.opacity = '0';
+    <main class="max-w-6xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-4 space-y-6">
             
-            // B. Esperar a que desaparezca (500ms) y hacer el cambio
-            setTimeout(() => {
-                step1.style.display = 'none'; // Quitar paso 1
-                step2.style.display = 'block'; // Poner paso 2
+            <!-- SECCIÓN SORPRESA -->
+            <section class="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 relative overflow-hidden group">
+                <div class="absolute -top-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+                    <i data-lucide="dices" class="w-24 h-24 rotate-12"></i>
+                </div>
+                <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+                    <i data-lucide="clock" class="w-5 h-5 text-rose-500"></i> ¿Cuándo salen?
+                </h2>
+                <div class="space-y-4 relative z-10">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-wider">Fecha seleccionada</label>
+                        <div id="selectedDateDisplay" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-600">
+                            Haz clic en el calendario
+                        </div>
+                    </div>
+                    <button id="rollDiceBtn" class="w-full bg-slate-900 text-white py-4 rounded-2xl hover:bg-slate-800 transition-all font-bold flex items-center justify-center gap-2 shadow-xl shadow-slate-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="dices" class="w-5 h-5"></i> ¡Elegir lugar al azar!
+                    </button>
+                </div>
                 
-                // C. Pequeño delay para que el navegador note el cambio de display antes de animar la opacidad
-                setTimeout(() => {
-                    step2.style.opacity = '1'; 
-                }, 50);
-            }, 500);
+                <div id="surpriseResult" class="hidden mt-4 p-5 bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 rounded-2xl animate-pop">
+                    <div class="text-center mb-4">
+                        <p class="text-[10px] text-emerald-600 font-black uppercase mb-1 tracking-widest">✨ ¡Lugar Seleccionado! ✨</p>
+                        <p id="resultPlaceName" class="text-emerald-800 font-black text-xl uppercase leading-tight"></p>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <input type="email" id="partnerEmail" placeholder="Email de tu pareja" class="px-3 py-2 bg-white border border-emerald-100 rounded-xl text-xs outline-none">
+                        <button id="sendInvitationBtn" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="send" class="w-4 h-4"></i> Enviar invitación automática
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAVORITOS -->
+            <section class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                <h2 class="font-bold mb-4 flex items-center gap-2 text-slate-700">
+                   <i data-lucide="plus" class="w-4 h-4 text-orange-500"></i> Nuevo Favorito
+                </h2>
+                <div class="flex gap-2">
+                    <input type="text" id="inputPlace" placeholder="Nombre..." class="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-orange-300 transition-colors">
+                    <button id="addPlaceBtn" class="bg-orange-500 text-white p-2.5 rounded-xl hover:bg-orange-600 transition-all">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="mt-8 space-y-3">
+                    <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-2">Lista Compartida</h3>
+                    <div id="placesList" class="max-h-64 overflow-y-auto pr-2 space-y-2 scrollbar-hide"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- CALENDARIO INTERACTIVO -->
+        <div class="lg:col-span-8">
+            <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+                <div class="p-6 md:p-8 flex items-center justify-between border-b bg-white">
+                    <div>
+                        <h2 id="calendarTitle" class="text-2xl font-black capitalize text-slate-800">Mes Año</h2>
+                        <p class="text-slate-400 text-xs font-medium">Pulsa un día para agendar su cita</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="prevMonth" class="p-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all active:scale-95"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                        <button id="nextMonth" class="p-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all active:scale-95"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+                <div class="calendar-grid bg-slate-50/50 border-b">
+                    <div class="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Dom</div>
+                    <div class="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Lun</div>
+                    <div class="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Mar</div>
+                    <div class="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Mié</div>
+                    <div class="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Jue</div>
+                    <div class="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Vie</div>
+                    <div class="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Sáb</div>
+                </div>
+                <div id="calendarBody" class="calendar-grid auto-rows-[100px] md:auto-rows-[130px]"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FIREBASE SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // CONFIGURACIÓN PROPORCIONADA POR EL ENTORNO
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gourmet-couple-app';
+
+        // ESTADO GLOBAL
+        let coupleCode = localStorage.getItem('gourmet_couple_code') || "";
+        let places = [];
+        let events = [];
+        let currentMonth = new Date();
+        let selectedDate = null;
+        let lastEventCreated = null;
+
+        // INICIALIZACIÓN DE ICONOS
+        lucide.createIcons();
+
+        // 1. AUTENTICACIÓN
+        const initAuth = async () => {
+            await signInAnonymously(auth);
+            if (coupleCode) {
+                document.getElementById('authOverlay').classList.add('hidden');
+                startSync();
+            }
+        };
+        initAuth();
+
+        // 2. UNIRSE A UNA PAREJA
+        document.getElementById('joinBtn').addEventListener('click', () => {
+            const input = document.getElementById('coupleCodeInput').value.trim().toLowerCase();
+            if (input.length < 4) {
+                alert("El código debe tener al menos 4 caracteres.");
+                return;
+            }
+            coupleCode = input;
+            localStorage.setItem('gourmet_couple_code', coupleCode);
+            document.getElementById('authOverlay').classList.add('hidden');
+            startSync();
         });
+
+        // 3. SINCRONIZACIÓN EN TIEMPO REAL
+        const startSync = () => {
+            document.getElementById('coupleStatus').classList.remove('hidden');
+            document.getElementById('displayCoupleCode').innerText = coupleCode;
+
+            // Escuchar Restaurantes (Colección compartida en artifacts/{appId}/public/data/places)
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'places'), (snapshot) => {
+                const allPlaces = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Filtrar por código de pareja en memoria
+                places = allPlaces.filter(p => p.coupleCode === coupleCode);
+                renderPlaces();
+            }, (err) => console.error("Error sincronizando lugares:", err));
+
+            // Escuchar Eventos (Colección compartida en artifacts/{appId}/public/data/events)
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'events'), (snapshot) => {
+                const allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                events = allEvents.filter(e => e.coupleCode === coupleCode);
+                renderCalendar();
+                checkNotifications();
+            }, (err) => console.error("Error sincronizando eventos:", err));
+        };
+
+        // 4. ACCIONES DE BASE DE DATOS
+        async function addPlace() {
+            const input = document.getElementById('inputPlace');
+            if (!input.value.trim()) return;
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'places'), {
+                    name: input.value.trim(),
+                    coupleCode: coupleCode,
+                    createdAt: Date.now()
+                });
+                input.value = '';
+            } catch (e) { console.error("Error guardando lugar:", e); }
+        }
+
+        async function deletePlace(id) {
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'places', id));
+            } catch (e) { console.error("Error eliminando lugar:", e); }
+        }
+
+        async function deleteEvent(id) {
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'events', id));
+            } catch (e) { console.error("Error eliminando evento:", e); }
+        }
+
+        async function scheduleRandomDate() {
+            if (!selectedDate || places.length === 0) return;
+
+            const randomPlace = places[Math.floor(Math.random() * places.length)];
+            const eventData = {
+                placeId: randomPlace.id,
+                placeName: randomPlace.name,
+                date: selectedDate,
+                coupleCode: coupleCode,
+                createdAt: Date.now()
+            };
+
+            try {
+                const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'events'), eventData);
+                lastEventCreated = { ...eventData, id: docRef.id };
+                
+                // Mostrar resultado
+                const resultBox = document.getElementById('surpriseResult');
+                document.getElementById('resultPlaceName').innerText = randomPlace.name;
+                resultBox.classList.remove('hidden');
+
+                // Enviar mail automático si hay email configurado
+                const email = document.getElementById('partnerEmail').value.trim();
+                if (email) {
+                    setTimeout(() => sendEmailInvitation(email), 1500);
+                }
+            } catch (e) { console.error("Error agendando cita:", e); }
+        }
+
+        // 5. RENDERIZADO DE UI
+        function renderPlaces() {
+            const list = document.getElementById('placesList');
+            list.innerHTML = places.map(p => `
+                <div class="bg-white p-3 rounded-2xl border border-slate-100 flex justify-between items-center group hover:border-rose-100 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
+                            <i data-lucide="utensils" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-bold text-sm text-slate-600">${p.name}</span>
+                    </div>
+                    <button onclick="window.appDeletePlace('${p.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all p-1">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderCalendar() {
+            const body = document.getElementById('calendarBody');
+            const title = document.getElementById('calendarTitle');
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            title.innerText = currentMonth.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toLocaleDateString('en-CA');
+
+            body.innerHTML = '';
+
+            for (let i = 0; i < firstDay; i++) {
+                body.innerHTML += `<div class="day-cell empty border-r border-b p-2 bg-slate-50/10"></div>`;
+            }
+
+            for (let d = 1; d <= lastDay; d++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayEvents = events.filter(e => e.date === dateStr);
+                const isToday = dateStr === todayStr;
+                const isSelected = selectedDate === dateStr;
+
+                const cell = document.createElement('div');
+                cell.className = `day-cell border-r border-b p-2 relative group overflow-hidden ${isSelected ? 'selected' : ''}`;
+                cell.innerHTML = `
+                    <span class="text-xs font-bold w-8 h-8 flex items-center justify-center rounded-xl mb-1 ${isToday ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'text-slate-300'}">${d}</span>
+                    <div class="mt-1 space-y-1 overflow-y-auto scrollbar-hide max-h-[70%] pb-2">
+                        ${dayEvents.map(e => `
+                            <div class="bg-white border-l-4 border-rose-500 shadow-sm p-2 rounded-xl text-[9px] font-black uppercase text-slate-700 leading-tight flex justify-between items-center animate-pop">
+                                <span class="truncate">${e.placeName}</span>
+                                <button onclick="event.stopPropagation(); window.appDeleteEvent('${e.id}')" class="text-slate-200 hover:text-rose-400 ml-1"><i data-lucide="x" class="w-2.5 h-2.5"></i></button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                cell.onclick = () => {
+                    selectedDate = dateStr;
+                    document.getElementById('selectedDateDisplay').innerText = new Date(dateStr + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+                    renderCalendar();
+                };
+                body.appendChild(cell);
+            }
+            lucide.createIcons();
+        }
+
+        // 6. UTILIDADES
+        function checkNotifications() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            let notifications = [];
+
+            events.forEach(e => {
+                const eventDate = new Date(e.date + "T00:00:00");
+                const diffDays = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+                if (diffDays === 2) notifications.push(`¡En 2 días: <b>${e.placeName}</b>!`);
+                else if (diffDays === 0) notifications.push(`¡Hoy es en <b>${e.placeName}</b>! ❤️`);
+            });
+
+            if (notifications.length > 0) {
+                badge.classList.remove('hidden');
+                list.innerHTML = notifications.map(n => `
+                    <div class="p-4 border-b text-xs flex gap-3 hover:bg-slate-50 transition-colors">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-500 shrink-0"></i>
+                        <span class="leading-relaxed text-slate-600">${n}</span>
+                    </div>
+                `).join('');
+            } else {
+                badge.classList.add('hidden');
+                list.innerHTML = `<div class="p-10 text-center text-slate-400 text-xs italic">No hay avisos próximos</div>`;
+            }
+            lucide.createIcons();
+        }
+
+        function sendEmailInvitation(email) {
+            if (!lastEventCreated) return;
+            const formattedDate = new Date(lastEventCreated.date + "T00:00:00").toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const gDate = lastEventCreated.date.replace(/-/g, '');
+            const gCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Cita+Sorpresa:+${encodeURIComponent(lastEventCreated.placeName)}&dates=${gDate}/${gDate}&details=${encodeURIComponent('Cita romántica elegida por nuestra Agenda Gourmet.')}&location=${encodeURIComponent(lastEventCreated.placeName)}`;
+            
+            const subject = encodeURIComponent("¡Nuestra próxima cita sorpresa! 🥂❤️");
+            const body = encodeURIComponent(`¡Hola amor!\n\nNuestra Agenda Gourmet ha decidido que el próximo ${formattedDate} iremos a cenar a:\n\n✨ ${lastEventCreated.placeName.toUpperCase()} ✨\n\n¡Prepárate! Puedes agendarlo haciendo clic aquí:\n${gCalendarUrl}\n\n¡Te quiero mucho!`);
+            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+        }
+
+        // EXPOSICIÓN GLOBAL PARA ATRIBUTOS ONCLICK
+        window.appDeletePlace = deletePlace;
+        window.appDeleteEvent = deleteEvent;
+        window.changeMonth = (offset) => {
+            currentMonth.setMonth(currentMonth.getMonth() + offset);
+            renderCalendar();
+        };
+
+        // EVENT LISTENERS RESTANTES
+        document.getElementById('addPlaceBtn').addEventListener('click', addPlace);
+        document.getElementById('rollDiceBtn').addEventListener('click', scheduleRandomDate);
+        document.getElementById('prevMonth').addEventListener('click', () => window.changeMonth(-1));
+        document.getElementById('nextMonth').addEventListener('click', () => window.changeMonth(1));
+        document.getElementById('sendInvitationBtn').addEventListener('click', () => {
+            const email = document.getElementById('partnerEmail').value.trim();
+            if (email) sendEmailInvitation(email);
+            else alert("Ingresa un email válido.");
+        });
+
     </script>
 </body>
-
 </html>
+
